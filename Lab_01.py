@@ -94,3 +94,10 @@ r_cylinder = float(input("Enter the radius of the cylinder: "))
 area_cylinder = 2 * math.pi * r_cylinder * height + 2 * math.pi * r_cylinder**2
 
 print("The surface area of cylinder: " + str(round(area_cylinder, 2)))
+
+
+# Program 6
+name = input("Enter your first name: ")
+surname = input("Enter your surname: ")
+
+print("Your initials are: " + name[0] + "." + surname[0] + ".")
