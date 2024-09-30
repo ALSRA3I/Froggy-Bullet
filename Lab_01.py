@@ -101,3 +101,12 @@ name = input("Enter your first name: ")
 surname = input("Enter your surname: ")
 
 print("Your initials are: " + name[0] + "." + surname[0] + ".")
+
+
+# Program 7
+age = int(input("Enter your age: "))
+
+if age < 18:
+    print("False")
+else:
+    print("True")
