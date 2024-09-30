@@ -78,3 +78,10 @@ area = math.pi * r**2
 circum = 2 * math.pi * r
 
 print("The area: " + str(round(area, 2)), "The circumference: " + str(round(circum, 2)))
+
+
+# Program 4
+r_sphere = float(input("Enter the sphere radius: "))
+area_sphere = 4 * math.pi * r**2
+
+print("The sphere area: " + str(round(area_sphere, 2)))
