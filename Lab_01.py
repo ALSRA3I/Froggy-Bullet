@@ -39,3 +39,7 @@ day == "Beautiful"
 print("Today is " + day)
 
 print (str(day == "Beautiful") + ": Today is " + day)
+
+
+operand1 = input("Input a number: ")
+print("You entered " + operand1)
