@@ -62,3 +62,9 @@ print("The product: " + str(number1 * number2))
 print("The ratio: " + str(number1 / number2))
 print("The modulus: " + str(number1 % number2))
 print("The exponentiation: " + str(number1 ** number2))
+
+
+# Program 2
+temp_c = float(input("Enter the temperature in Celsius: "))
+
+print("The temperature in Fahrenheit: " + str((temp_c * 9 / 5) + 32))
