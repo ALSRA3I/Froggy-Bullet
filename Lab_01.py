@@ -51,3 +51,14 @@ print (str(day == "Beautiful") + ": Today is " + day)
 # Task 8
 operand1 = input("Input a number: ")
 print("You entered " + operand1)
+
+
+# Program 1
+number1 = int(input("Enter the first number: "))
+number2 = int(input("Enter the second number: "))
+
+print("The sum: " + str(number1 + number2))
+print("The product: " + str(number1 * number2))
+print("The ratio: " + str(number1 / number2))
+print("The modulus: " + str(number1 % number2))
+print("The exponentiation: " + str(number1 ** number2))
