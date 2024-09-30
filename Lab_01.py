@@ -1,3 +1,5 @@
+import math
+
 # Task 1,2
 def printState():
     print("Red Light is " + str(redLight))
@@ -68,3 +70,11 @@ print("The exponentiation: " + str(number1 ** number2))
 temp_c = float(input("Enter the temperature in Celsius: "))
 
 print("The temperature in Fahrenheit: " + str((temp_c * 9 / 5) + 32))
+
+
+# Program 3
+r = float(input("Enter the value of radius: "))
+area = math.pi * r**2
+circum = 2 * math.pi * r
+
+print("The area: " + str(round(area, 2)), "The circumference: " + str(round(circum, 2)))
