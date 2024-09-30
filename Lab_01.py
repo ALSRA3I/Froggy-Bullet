@@ -7,3 +7,7 @@ redLight = 1
 yellowLight = 0
 greenLight = 0
 printState()
+
+print(3 + 5)
+
+print("3" + "5")
