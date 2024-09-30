@@ -85,3 +85,12 @@ r_sphere = float(input("Enter the sphere radius: "))
 area_sphere = 4 * math.pi * r**2
 
 print("The sphere area: " + str(round(area_sphere, 2)))
+
+
+# Program 5
+height = float(input("Enter the height of the cylinder: "))
+r_cylinder = float(input("Enter the radius of the cylinder: "))
+
+area_cylinder = 2 * math.pi * r_cylinder * height + 2 * math.pi * r_cylinder**2
+
+print("The surface area of cylinder: " + str(round(area_cylinder, 2)))
