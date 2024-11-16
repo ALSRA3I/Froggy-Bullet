@@ -9,7 +9,19 @@ def configure_window():
     window.title("F r o g g y  B u l l e t")
 
 def start_game():
-    messagebox.showinfo("Start Game", "Starting the game...")
+    for widget in window.winfo_children():
+        widget.destroy()
+
+    # Add a score
+    score = IntVar(value=0)
+    score_label = Label(window, text="Score: 0", font=("Arial", 16), background="#ffffff")
+    score_label.pack(anchor="nw", padx=10, pady=10)
+
+    # Adding the Frogg
+    frog = PhotoImage(file="green_frog1.png")
+    frog_label = Label(window, image=frog, bg="#ffffff")
+    frog_label.image = frog
+    frog_label.place(relx=0.5, rely=0.5, anchor="center")
 
 def show_leaderboard():
     messagebox.showinfo("Leaderboard", "Displaying leaderboard...")
