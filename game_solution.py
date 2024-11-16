@@ -1,6 +1,6 @@
 # The game should comply with the PEP8 standard
 
-from tkinter import Tk, IntVar, Label, PhotoImage
+from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button
 
 # All your functions go here
 def configure_window():
@@ -8,22 +8,26 @@ def configure_window():
     window.configure(background="#ffffff")
     window.title("F r o g g y  B u l l e t")
 
+def start_game():
+    messagebox.showinfo("Start Game", "Starting the game...")
+
+def show_leaderboard():
+    messagebox.showinfo("Leaderboard", "Displaying leaderboard...")
+
+def open_settings():
+    messagebox.showinfo("Settings", "Opening settings...")
+
 window = Tk()
 configure_window()
 
 # All your global stuff goes here
-user_answer = IntVar()
+start_button = Button(window, text="Start", command=start_game, font=("Arial", 16))
+leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
+settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
 
-current_score = 0
-score = Label(window, text="Score: 0", font=("Arial Bold",50), background="#000000")
-score.grid(column=2, row=2, columnspan=4, sticky="E")
-
-# Place the images here
-# Frog
-# Butterfly
-# Bug
-# Bug1
-# Bug2
-# Bat
+# Position the buttons on the window
+start_button.pack(pady=20)
+leaderboard_button.pack(pady=10)
+settings_button.pack(pady=10)
 
 window.mainloop()
