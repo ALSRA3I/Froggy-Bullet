@@ -70,22 +70,34 @@ def start_game():
 
             side = random.choice(["top", "left", "right", "bottom"])
             if side == "top":
-                enemy_label.place(x=random.randint(0,600), y=0)
+                x_pos = random.randint(0,600)
+                y_pos = -50
+                enemy_label.place(x=x_pos, y=y_pos)
             elif side == "left":
-                enemy_label.place(x=0, y=random.randint(0,600))
+                x_pos = -50
+                y_pos = random.randint(0,600)
+                enemy_label.place(x=x_pos, y=y_pos)
             elif side == "right":
-                enemy_label.place(x=600, y=random.randint(0, 600))
+                x_pos = 650
+                y_pos = random.randint(0,600)
+                enemy_label.place(x=x_pos, y=y_pos)
             elif side == "bottom":
-                enemy_label.place(x=random.randint(0,600), y=600)
+                x_pos = random.randint(0,600)
+                y_pos = 650
+                enemy_label.place(x=x_pos, y=y_pos)
+
+            window.update_idletasks()
+
+            print(f"{enemy_type} spawned at ({enemy_label.winfo_x()}, {enemy_label.winfo_y()})")
 
             move_enemy(enemy_label, enemy_type)
 
         if enemy_type == 'bug':
-            window.after(1000, lambda: spawn_enemy('bug'))
+            window.after(random.randint(1500, 3000), lambda: spawn_enemy('bug'))
         if enemy_type == 'butterfly':
-            window.after(5000, lambda: spawn_enemy('butterfly'))
+            window.after(random.randint(2500, 4000), lambda: spawn_enemy('butterfly'))
         if enemy_type == 'bat':
-            window.after(7000, lambda: spawn_enemy('bat'))
+            window.after(random.randint(1000, 2000), lambda: spawn_enemy('bat'))
 
     def move_enemy(enemy_label, enemy_type):
         if is_paused:
