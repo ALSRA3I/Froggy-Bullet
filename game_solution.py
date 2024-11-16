@@ -17,11 +17,25 @@ def start_game():
     score_label = Label(window, text="Score: 0", font=("Arial", 16), background="#ffffff")
     score_label.pack(anchor="nw", padx=10, pady=10)
 
-    # Adding the Frogg
+    # Add the Frogg
     frog = PhotoImage(file="green_frog1.png")
     frog_label = Label(window, image=frog, bg="#ffffff")
     frog_label.image = frog
     frog_label.place(relx=0.5, rely=0.5, anchor="center")
+
+    # Pause and Unpause
+    is_paused = False
+
+    def pause_toggle():
+        if is_paused == False:
+            is_paused = False
+            pause_button.config(text="Pause")
+        else:
+            is_paused = True
+            pause_button.config(text="Unpaused")
+
+    pause_button = Button(window, text="Pause", command=pause_toggle, font=("Arial", 14))
+    pause_button.pack(pady=10)
 
 def show_leaderboard():
     messagebox.showinfo("Leaderboard", "Displaying leaderboard...")
