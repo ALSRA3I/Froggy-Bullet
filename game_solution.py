@@ -20,11 +20,30 @@ def start_game():
     score_label.pack(anchor="nw", padx=10, pady=10)
 
     # Add the Frog
-    frog = PhotoImage(file="green_frog1.png")
-    frog_label = Label(window, image=frog, bg="#ffffff")
+    frog_img = Image.open("green_frog1.png")
+    frog = ImageTk.PhotoImage(frog_img)
+    frog_label = Label(window, image=frog, background="#ffffff")
     frog_label.image = frog
     frog_label.place(relx=0.5, rely=0.5, anchor="center")
 
+    def update_frog_image():
+        rotated_img = frog_img.rotate(rotation_angle)
+        frog_label.image = ImageTk.PhotoImage(rotated_img)
+        frog_label.config(image=frog_label.image)
+
+    def rotate_left(event=None):
+        global rotation_angle
+        rotation_angle = (rotation_angle + 10) % 360
+        update_frog_image()
+
+    def rotate_right(event=None):
+        global rotation_angle
+        rotation_angle = (rotation_angle - 10) % 360
+        update_frog_image()
+
+    window.bind("<Left>", rotate_left)
+    window.bind("<Right>", rotate_right)
+        
     # Pause and Unpause
     is_paused = False
 
@@ -162,6 +181,8 @@ configure_window()
 start_button = Button(window, text="Start", command=start_game, font=("Arial", 16))
 leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
 settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
+rotation_angle = 0
+
 
 # Position the buttons on the window
 start_button.pack(pady=20)
