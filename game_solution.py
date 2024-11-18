@@ -15,7 +15,7 @@ def start_game():
         widget.destroy()
 
     # Add a score
-    score = IntVar(value=0)
+    global score
     score_label = Label(window, text="Score: 0", font=("Arial", 16), background="#ffffff")
     score_label.pack(anchor="nw", padx=10, pady=10)
 
@@ -121,6 +121,10 @@ def start_game():
             window.after(100, lambda: move_enemy(enemy_label, enemy_type))
             return
         
+        if not enemy_label.winfo_exists():
+            return
+        
+
         x = enemy_label.winfo_x()
         y = enemy_label.winfo_y()
 
@@ -143,11 +147,12 @@ def start_game():
         if abs(new_x - frog_x) < 30 and abs(new_y - frog_y) < 30:
             enemy_label.destroy()
             enemy_death(enemy_type)
+            return
 
         window.after(50, lambda: move_enemy(enemy_label, enemy_type))
 
     def enemy_death(enemy_type):
-        nonlocal score
+        global score
         if enemy_type == 'bug':
             score.set(score.get() + 10)
         elif enemy_type == 'butterfly':
@@ -180,6 +185,7 @@ start_button = Button(window, text="Start", command=start_game, font=("Arial", 1
 leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
 settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
 rotation_angle = 0
+score = IntVar(value=0)
 
 
 # Position the buttons on the window
