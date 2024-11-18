@@ -107,8 +107,6 @@ def start_game():
 
             window.update_idletasks()
 
-            print(f"{enemy_type} spawned at ({enemy_label.winfo_x()}, {enemy_label.winfo_y()})")
-
             move_enemy(enemy_label, enemy_type)
 
         if enemy_type == 'bug':
