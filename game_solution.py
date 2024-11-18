@@ -1,4 +1,4 @@
-from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button
+from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas
 from PIL import Image, ImageTk
 import math
 import random
@@ -47,9 +47,20 @@ def start_game():
         global rotation_angle
         rotation_angle = (rotation_angle - 10) % 360
         update_frog_image()
+    
+    def fire(event=None):
+        tongue_img = Image.open("tongue.jpg").resize((5,5))
+        rotated_tongue = tongue_img.rotate(rotation_angle, resample=Image.BICUBIC, center=(2.5,0))
+        tongue = ImageTk.PhotoImage(rotated_tongue)
+        tongue_label = Label(window, image=tongue, background="#f7c3c3")
+        tongue_label.image = tongue
+        tongue_label.place(relx=0.5, rely=0.5, anchor="center")
+
+        window.after(100, tongue_label.destroy)
 
     window.bind("<Left>", rotate_left)
     window.bind("<Right>", rotate_right)
+    window.bind("<space>", fire)
         
     # Pause and Unpause
     is_paused = False
@@ -67,11 +78,11 @@ def start_game():
     bug = ImageTk.PhotoImage(bug_img)
 
     butterfly_img = Image.open("butterfly.png")
-    butterfly_img = butterfly_img.resize((20,20))
+    butterfly_img = butterfly_img.resize((40,40))
     butterfly = ImageTk.PhotoImage(butterfly_img)
 
     bat_img = Image.open("bat.png")
-    bat_img = bat_img.resize((20,20))
+    bat_img = bat_img.resize((30,30))
     bat = ImageTk.PhotoImage(bat_img)
 
     enemy_images = [bug, butterfly, bat]
@@ -117,11 +128,11 @@ def start_game():
             move_enemy(enemy_label, enemy_type)
 
         if enemy_type == 'bug':
-            window.after(random.randint(1500, 3000), lambda: spawn_enemy('bug'))
+            window.after(5000, lambda: spawn_enemy('bug'))
         if enemy_type == 'butterfly':
-            window.after(random.randint(2500, 4000), lambda: spawn_enemy('butterfly'))
+            window.after(5000, lambda: spawn_enemy('butterfly'))
         if enemy_type == 'bat':
-            window.after(random.randint(1000, 2000), lambda: spawn_enemy('bat'))
+            window.after(7000, lambda: spawn_enemy('bat'))
 
     def move_enemy(enemy_label, enemy_type):
         if is_paused:
@@ -179,15 +190,22 @@ def start_game():
 
 
 def show_leaderboard():
-    messagebox.showinfo("Leaderboard", "Displaying leaderboard...")
+    for widget in window.winfo_children():
+        widget.destroy()
+    title = Label(window, text="Leaderboard", font=("Arial", 16), background="#ffffff")
+    title.pack(anchor="center", pady=10) 
 
 def open_settings():
-    messagebox.showinfo("Settings", "Opening settings...")
+    for widget in window.winfo_children():
+        widget.destroy()
+    title = Label(window, text="Settings", font=("Arial", 16), background="#ffffff")
+    title.pack(anchor="center", pady=10)
 
 window = Tk()
 configure_window()
 
 # All your global stuff goes here
+title = Label(window, text="Froggy Bullet", font=("Arial", 16), background="#ffffff")
 start_button = Button(window, text="Start", command=start_game, font=("Arial", 16))
 leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
 settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
@@ -196,6 +214,7 @@ score = IntVar(value=0)
 
 
 # Position the buttons on the window
+title.pack(anchor="center", pady=10)
 start_button.pack(pady=20)
 leaderboard_button.pack(pady=10)
 settings_button.pack(pady=10)
