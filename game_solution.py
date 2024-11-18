@@ -14,6 +14,13 @@ def start_game():
     for widget in window.winfo_children():
         widget.destroy()
 
+    # Add a background for the game
+    bg_image = Image.open("background.jpg")
+    bg_img = ImageTk.PhotoImage(bg_image)
+    bg_label = Label(window, image=bg_img)
+    bg_label.image = bg_img
+    bg_label.place(relwidth=1, relheight=1)
+
     # Add a score
     global score
     score_label = Label(window, text="Score: 0", font=("Arial", 16), background="#ffffff")
@@ -70,9 +77,9 @@ def start_game():
     enemy_images = [bug, butterfly, bat]
 
     speeds = {
-        'bug': 3,
-        'butterfly': 3,
-        'bat': 7
+        'bug': 2,
+        'butterfly': 2,
+        'bat': 2
     }
 
     def spawn_enemy(enemy_type):
