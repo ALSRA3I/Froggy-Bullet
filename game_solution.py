@@ -1,4 +1,4 @@
-from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar
+from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar, Entry
 from PIL import Image, ImageTk
 import math
 import random
@@ -10,7 +10,32 @@ def configure_window():
     window.title("F r o g g y  B u l l e t")
 
 
+def show_home():
+    global player_name, name_entry
+    for widget in window.winfo_children():
+        widget.destroy()
+    title = Label(window, text="Froggy Bullet", font=("Arial", 16), background="#ffffff")
+    start_button = Button(window, text="Start", command=start_game, font=("Arial", 16))
+    leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
+    settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
+    name_entry = Entry(window, text="", width=30)
+
+    title.pack(anchor="center", pady=10)
+    start_button.pack(pady=20)
+    name_entry.pack()
+    leaderboard_button.pack(pady=10)
+    settings_button.pack(pady=10)
+
+
 def start_game():
+    global player_name, name_entry
+    name = name_entry.get()
+    player_name = name
+    print(player_name)
+    if player_name == "":
+        messagebox.showerror("missing name", "Please Enter your name in the box")
+        return
+
     for widget in window.winfo_children():
         widget.destroy()
 
@@ -49,49 +74,51 @@ def start_game():
         update_frog_image()
     
     def fire(event=None):
-        tongue_img = Image.open("tongue.jpg").resize((10, 10))
-        tongue = ImageTk.PhotoImage(tongue_img)
-        tongue_label = Label(window, image=tongue, background="#f7c3c3")
-        tongue_label.image = tongue
-        tongue_label.place(x=400, y=400)
-        window.update_idletasks()
+        global game_over_bool
+        if not is_paused or not game_over_bool.get():
+            tongue_img = Image.open("tongue.jpg").resize((10, 10))
+            tongue = ImageTk.PhotoImage(tongue_img)
+            tongue_label = Label(window, image=tongue, background="#f7c3c3")
+            tongue_label.image = tongue
+            tongue_label.place(x=400, y=400)
+            window.update_idletasks()
 
-        def move_tongue():
-            x = tongue_label.winfo_x()
-            y = tongue_label.winfo_y()
+            def move_tongue():
+                x = tongue_label.winfo_x()
+                y = tongue_label.winfo_y()
 
-            corrected_angle = rotation_angle + 90
+                corrected_angle = rotation_angle + 90
 
-            radians = math.radians(corrected_angle)
-            dx = math.cos(radians)
-            dy = -math.sin(radians) 
+                radians = math.radians(corrected_angle)
+                dx = math.cos(radians)
+                dy = -math.sin(radians) 
 
-            pace = 50
-            step_x = dx * pace
-            step_y = dy * pace
+                pace = 50
+                step_x = dx * pace
+                step_y = dy * pace
 
-            new_x = x + step_x
-            new_y = y + step_y
-            
-            tongue_label.place(x=new_x, y=new_y)
+                new_x = x + step_x
+                new_y = y + step_y
+                
+                tongue_label.place(x=new_x, y=new_y)
 
-            for enemy_label, enemy_type in enemies:
-                ex, ey = enemy_label.winfo_x(), enemy_label.winfo_y()
-                if abs(new_x - ex) < 25 and abs(new_y - ey) < 25:
-                    enemy_label.destroy()  # Remove enemy
-                    tongue_label.destroy()  # Remove tongue
-                    enemies.remove((enemy_label, enemy_type))  # Remove from list
-                    enemy_death(enemy_type)  # Update score
-                    return  # Stop tongue movement
+                for enemy_label, enemy_type in enemies:
+                    ex, ey = enemy_label.winfo_x(), enemy_label.winfo_y()
+                    if abs(new_x - ex) < 25 and abs(new_y - ey) < 25:
+                        enemy_label.destroy()  # Remove enemy
+                        tongue_label.destroy()  # Remove tongue
+                        enemies.remove((enemy_label, enemy_type))  # Remove from list
+                        enemy_death(enemy_type)  # Update score
+                        return  # Stop tongue movement
 
-            if not (0 <= new_x <= 800 and 0 <= new_y <= 800):
-                tongue_label.destroy() 
-                return
+                if not (0 <= new_x <= 800 and 0 <= new_y <= 800):
+                    tongue_label.destroy() 
+                    return
 
-            window.after(50, lambda: move_tongue())
-            
-        move_tongue()
-
+                window.after(50, lambda: move_tongue())
+                
+            move_tongue()
+    
     window.bind("<Left>", rotate_left)
     window.bind("<Right>", rotate_right)
     window.bind("<space>", fire)
@@ -119,17 +146,16 @@ def start_game():
     bat_img = bat_img.resize((25,25))
     bat = ImageTk.PhotoImage(bat_img)
 
-    enemy_images = [bug, butterfly, bat]
-
+    more_speed = float(score.get()) * 0.001
     speeds = {
-        'bug': 2,
-        'butterfly': 2,
-        'bat': 2
+        'bug': 2 + more_speed,
+        'butterfly': 2 + more_speed,
+        'bat': 2 + more_speed
     }
 
     def spawn_enemy(enemy_type):
-        global enemies
-        if not is_paused:
+        global enemies, game_over_bool
+        if not is_paused or not game_over_bool.get():
             if enemy_type == 'bug':
                 enemy_img = bug
             elif enemy_type == 'butterfly':
@@ -143,19 +169,19 @@ def start_game():
 
             side = random.choice(["top", "left", "right", "bottom"])
             if side == "top":
-                x_pos = random.randint(0,600)
+                x_pos = random.randint(0,800)
                 y_pos = -50
             elif side == "left":
                 x_pos = -50
-                y_pos = random.randint(0,600)
+                y_pos = random.randint(0,800)
                
             elif side == "right":
-                x_pos = 650
-                y_pos = random.randint(0,600)
+                x_pos = 850
+                y_pos = random.randint(0,800)
                
             elif side == "bottom":
-                x_pos = random.randint(0,600)
-                y_pos = 650
+                x_pos = random.randint(0,800)
+                y_pos = 850
 
             enemy_label.place(x=x_pos, y=y_pos)
 
@@ -163,12 +189,12 @@ def start_game():
 
             move_enemy(enemy_label, enemy_type)
 
-        if enemy_type == 'bug':
-            window.after(5000, lambda: spawn_enemy('bug'))
-        if enemy_type == 'butterfly':
-            window.after(5000, lambda: spawn_enemy('butterfly'))
-        if enemy_type == 'bat':
-            window.after(7000, lambda: spawn_enemy('bat'))
+            if enemy_type == 'bug':
+                window.after(5000, lambda: spawn_enemy('bug'))
+            if enemy_type == 'butterfly':
+                window.after(8000, lambda: spawn_enemy('butterfly'))
+            if enemy_type == 'bat':
+                window.after(10000, lambda: spawn_enemy('bat'))
 
     def move_enemy(enemy_label, enemy_type):
         global game_over_bool
@@ -200,7 +226,6 @@ def start_game():
 
         if abs(new_x - frog_x) < 30 and abs(new_y - frog_y) < 30:
             enemy_label.destroy()
-            # enemy_death(enemy_type)
             game_over()
             return
 
@@ -223,43 +248,62 @@ def start_game():
 
 
 def game_over():
-        global game_over_bool
+        global game_over_bool, score, player_name
         game_over_bool.set(True)
         for widget in window.winfo_children():
             widget.destroy()
-        title = Label(window, text="Game Over", font=("Arial", 16), background="#ffffff")
+        
+        with open("leaderboard.txt", "a") as leaderboard_dict:
+            leaderboard_dict.write(f"{player_name},{score.get()}\n")
+
+        title = Label(window, text="Game Over", font=("Arial", 20), background="#ffffff")
+        leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
+        score_label = Label(window, text=f"Your Score: {score.get()}", font=("Arial", 16), background="#ffffff")
+        
         title.pack(anchor="center", pady=10)
+        score_label.pack(pady=10)
+        leaderboard_button.pack(pady=10)
 
 def show_leaderboard():
     for widget in window.winfo_children():
         widget.destroy()
+    
     title = Label(window, text="Leaderboard", font=("Arial", 16), background="#ffffff")
-    title.pack(anchor="center", pady=10) 
+    home_button = Button(window, text="Back to Home", command=show_home, font=("Arial", 16))
+    scores = []
+    with open("leaderboard.txt", "r") as file:
+        for line in file:
+            player_name, score = line.strip().split(',')
+            scores.append((player_name, int(score)))
+
+    scores.sort(key=lambda x: x[1], reverse=True)
+
+    title.pack(anchor="center", pady=10)
+    for i in range(min(5, len(scores))):
+        player_name, score = scores[i]
+        rank_label = Label(window, text=f"{i+1}.  {player_name}: {score}", font=("Arial", 12), background="#ffffff")
+        rank_label.pack(anchor="center", pady=10)
+
+    home_button.pack(pady=20) 
 
 def open_settings():
     for widget in window.winfo_children():
         widget.destroy()
     title = Label(window, text="Settings", font=("Arial", 16), background="#ffffff")
+    home_button = Button(window, text="Back to Home", command=show_home, font=("Arial", 16))
+
     title.pack(anchor="center", pady=10)
+    home_button.pack(pady=20)
 
 window = Tk()
 configure_window()
+show_home()
 
-# All your global stuff goes here
-title = Label(window, text="Froggy Bullet", font=("Arial", 16), background="#ffffff")
-start_button = Button(window, text="Start", command=start_game, font=("Arial", 16))
-leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
-settings_button = Button(window, text="Settings", command=open_settings, font=("Arial", 16))
-rotation_angle = 0
+# Here are the global variables
+rotation_angle = 0  # for frog rotation
 score = IntVar(value=0)
-game_over_bool = BooleanVar(value=False)
+game_over_bool = BooleanVar(value=False)    # To prevent movement during the end of the game
 enemies = []
-
-
-# Position the buttons on the window
-title.pack(anchor="center", pady=10)
-start_button.pack(pady=20)
-leaderboard_button.pack(pady=10)
-settings_button.pack(pady=10)
+player_name = ""
 
 window.mainloop()
