@@ -75,13 +75,13 @@ def start_game():
             
             tongue_label.place(x=new_x, y=new_y)
 
-            for enemy_label in enemies:
+            for enemy_label, enemy_type in enemies:
                 ex, ey = enemy_label.winfo_x(), enemy_label.winfo_y()
-                if abs(new_x - ex) < 20 and abs(new_y - ey) < 20:
+                if abs(new_x - ex) < 25 and abs(new_y - ey) < 25:
                     enemy_label.destroy()  # Remove enemy
                     tongue_label.destroy()  # Remove tongue
-                    enemies.remove(enemy_label)  # Remove from list
-                    enemy_death(enemy_label)  # Update score
+                    enemies.remove((enemy_label, enemy_type))  # Remove from list
+                    enemy_death(enemy_type)  # Update score
                     return  # Stop tongue movement
 
             if not (0 <= new_x <= 800 and 0 <= new_y <= 800):
@@ -112,11 +112,11 @@ def start_game():
     bug = ImageTk.PhotoImage(bug_img)
 
     butterfly_img = Image.open("butterfly.png")
-    butterfly_img = butterfly_img.resize((40,40))
+    butterfly_img = butterfly_img.resize((30,30))
     butterfly = ImageTk.PhotoImage(butterfly_img)
 
     bat_img = Image.open("bat.png")
-    bat_img = bat_img.resize((30,30))
+    bat_img = bat_img.resize((25,25))
     bat = ImageTk.PhotoImage(bat_img)
 
     enemy_images = [bug, butterfly, bat]
@@ -138,7 +138,7 @@ def start_game():
                 enemy_img = bat
             
             enemy_label = Label(window, image=enemy_img, background="#ffffff")
-            enemies.append(enemy_label)
+            enemies.append((enemy_label, enemy_type))
             enemy_label.image = enemy_img
 
             side = random.choice(["top", "left", "right", "bottom"])
@@ -213,7 +213,7 @@ def start_game():
         elif enemy_type == 'butterfly':
             score.set(score.get() + 20)
         elif enemy_type == 'bat':
-            score.set(score.get() + 30)
+            score.set(score.get() + 20)
 
         score_label.config(text=f"Score: {score.get()}")
 
