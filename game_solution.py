@@ -1,4 +1,4 @@
-from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar, Entry
+from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar, Entry, Toplevel, Spinbox
 from PIL import Image, ImageTk
 import math
 import random
@@ -28,10 +28,10 @@ def show_home():
 
 
 def start_game():
-    global player_name, name_entry
+    global player_name, name_entry, game_over_bool, right_button, left_button, fire_button
+    game_over_bool.set(False)
     name = name_entry.get()
     player_name = name
-    print(player_name)
     if player_name == "":
         messagebox.showerror("missing name", "Please Enter your name in the box")
         return
@@ -54,7 +54,7 @@ def start_game():
     # Add the Frog
     frog_img = Image.open("frog.png")
     frog = ImageTk.PhotoImage(frog_img)
-    frog_label = Label(window, image=frog, background="#ffffff")
+    frog_label = Label(window, image=frog, background="#ffde59")
     frog_label.image = frog
     frog_label.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -64,13 +64,13 @@ def start_game():
         frog_label.config(image=frog_label.image)
 
     def rotate_left(event=None):
-        global rotation_angle
-        rotation_angle = (rotation_angle + 10) % 360
+        global rotation_angle, rotation_speed
+        rotation_angle = (rotation_angle + rotation_speed) % 360
         update_frog_image()
 
     def rotate_right(event=None):
-        global rotation_angle
-        rotation_angle = (rotation_angle - 10) % 360
+        global rotation_angle, rotation_speed
+        rotation_angle = (rotation_angle - rotation_speed) % 360
         update_frog_image()
     
     def fire(event=None):
@@ -119,9 +119,9 @@ def start_game():
                 
             move_tongue()
     
-    window.bind("<Left>", rotate_left)
-    window.bind("<Right>", rotate_right)
-    window.bind("<space>", fire)
+    window.bind(f"<{left_button}>", rotate_left)
+    window.bind(f"<{right_button}>", rotate_right)
+    window.bind(f"<{fire_button}>", fire)
         
     # Pause and Unpause
     is_paused = False
@@ -132,8 +132,41 @@ def start_game():
         pause_button.config(text="Unpause" if is_paused else "Pause")
 
     pause_button = Button(window, text="Pause", command=pause_toggle, font=("Arial", 14))
-    pause_button.pack(pady=10)
+    pause_button.pack()
 
+    def boss_key(event=None):
+        """Toggle the fake workspace window (mock_window) for the boss key."""
+        mock_window = Toplevel(window)
+        mock_window.title("My workspace")
+        mock_window.geometry("800x800")
+        bg_image = Image.open("mock_picture.jpg")
+        bg_image = bg_image.resize((800, 800))
+        bg_photo = ImageTk.PhotoImage(bg_image)
+        
+        bg_label = Label(mock_window, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relwidth=1, relheight=1)
+        
+        window.iconify()
+        pause_toggle()
+        
+
+    # Bind the boss key (Ctrl+B)
+    window.bind('<Control-b>', boss_key)
+
+    def submit_key():
+        pass
+    
+    def show_input():
+        cheat_entry.pack()
+        submit_button.pack()
+        pass
+
+    cheat_entry = Entry(window, text="", width=20)
+    cheat_code = Button(window, text="Cheats", command=show_input, font=("Arial", 14))
+    submit_button = Button(window, text="Enter", command=submit_key, font=("Arial", 14))
+    cheat_code.pack()
+    
     bug_img = Image.open("fly.png")
     bug_img = bug_img.resize((20,20))
     bug = ImageTk.PhotoImage(bug_img)
@@ -163,7 +196,7 @@ def start_game():
             elif enemy_type == 'bat':
                 enemy_img = bat
             
-            enemy_label = Label(window, image=enemy_img, background="#ffffff")
+            enemy_label = Label(window, image=enemy_img, background="#7ed957")
             enemies.append((enemy_label, enemy_type))
             enemy_label.image = enemy_img
 
@@ -190,7 +223,7 @@ def start_game():
             move_enemy(enemy_label, enemy_type)
 
             if enemy_type == 'bug':
-                window.after(5000, lambda: spawn_enemy('bug'))
+                window.after(5000, lambda: spawn_enemy('bug'))  # We used lambda to delay the function call
             if enemy_type == 'butterfly':
                 window.after(8000, lambda: spawn_enemy('butterfly'))
             if enemy_type == 'bat':
@@ -258,11 +291,14 @@ def game_over():
 
         title = Label(window, text="Game Over", font=("Arial", 20), background="#ffffff")
         leaderboard_button = Button(window, text="Leaderboard", command=show_leaderboard, font=("Arial", 16))
+        home_button = Button(window, text="Back to Home", command=show_home, font=("Arial", 16))
         score_label = Label(window, text=f"Your Score: {score.get()}", font=("Arial", 16), background="#ffffff")
         
         title.pack(anchor="center", pady=10)
         score_label.pack(pady=10)
         leaderboard_button.pack(pady=10)
+        home_button.pack(pady=20)
+        
 
 def show_leaderboard():
     for widget in window.winfo_children():
@@ -281,7 +317,7 @@ def show_leaderboard():
     title.pack(anchor="center", pady=10)
     for i in range(min(5, len(scores))):
         player_name, score = scores[i]
-        rank_label = Label(window, text=f"{i+1}.  {player_name}: {score}", font=("Arial", 12), background="#ffffff")
+        rank_label = Label(window, text=f"{i+1}. {player_name}: {score}", font=("Arial", 12), background="#ffffff")
         rank_label.pack(anchor="center", pady=10)
 
     home_button.pack(pady=20) 
@@ -289,21 +325,80 @@ def show_leaderboard():
 def open_settings():
     for widget in window.winfo_children():
         widget.destroy()
+
+    def set_left_binding(event):
+        global left_button
+        left_button = event.keysym 
+        left_label.config(text=f"Left action now bound to: {left_button}")
+        window.unbind("<KeyPress>") 
+
+    def set_right_binding(event):
+        global right_button
+        right_button = event.keysym  
+        right_label.config(text=f"Right action now bound to: {right_button}")
+        window.unbind("<KeyPress>")
+
+    def set_fire_binding(event):
+        global fire_button
+        fire_button = event.keysym  
+        fire_label.config(text=f"Fire action now bound to: {fire_button}")
+        window.unbind("<KeyPress>")   
+
+    def change_rotation_func():
+        global rotation_speed
+        rotation_speed = int(change_rotation.get())
+        rotation_label.config(text=f"Rotation Speed: {rotation_speed}")
+
     title = Label(window, text="Settings", font=("Arial", 16), background="#ffffff")
     home_button = Button(window, text="Back to Home", command=show_home, font=("Arial", 16))
+    
+    left_label = Label(window, text=f"Left action currently bound to: {left_button}", font=("Arial", 16), background="#ffffff")
+    right_label = Label(window, text=f"Right action currently bound to: {right_button}", font=("Arial", 16), background="#ffffff")
+    fire_label = Label(window, text=f"Fire action currently bound to: {fire_button}", font=("Arial", 16), background="#ffffff")
+    
+    change_left = Button(window, text="Press any key for Left", font=("Arial", 16), command=lambda: window.bind("<KeyPress>", set_left_binding))
+    change_right = Button(window, text="Press any key for Right", font=("Arial", 16), command=lambda: window.bind("<KeyPress>", set_right_binding))
+    change_fire = Button(window, text="Press any key for Fire", font=("Arial", 16), command=lambda: window.bind("<KeyPress>", set_fire_binding))
+
+    change_rotation_button = Button(window, text="Change the rotation speed", font=("Arial", 16), command=change_rotation_func)
+    
+    
+    change_rotation = Spinbox(window, from_=1, to=20, state="readonly", font=("Arial", 14), width=5)
+    change_rotation.delete(0, "end")
+    change_rotation.insert(0, rotation_speed)
+    
+    rotation_label = Label(window, text=f"Rotation Speed: {rotation_speed}", font=("Arial", 16), background="#ffffff")
 
     title.pack(anchor="center", pady=10)
-    home_button.pack(pady=20)
+    
+    change_left.pack(pady=10)
+    left_label.pack()
+    
+    change_right.pack(pady=10)
+    right_label.pack()
+
+    change_fire.pack(pady=10)
+    fire_label.pack()
+
+    change_rotation_button.pack(pady=10)
+    change_rotation.pack()
+    rotation_label.pack(pady=10)
+
+    home_button.pack(pady=30)
 
 window = Tk()
 configure_window()
 show_home()
 
-# Here are the global variables
+# Here is the global variables
 rotation_angle = 0  # for frog rotation
 score = IntVar(value=0)
 game_over_bool = BooleanVar(value=False)    # To prevent movement during the end of the game
 enemies = []
 player_name = ""
+right_button = "Right"
+left_button = "Left"
+fire_button = "space"
+rotation_speed = 10
 
 window.mainloop()
