@@ -28,3 +28,4 @@ ggs,0
 afd,0
 sdfas,0
 fs,0
+asdf,50
