@@ -16,3 +16,15 @@ sdf,40
 sdf,40
 fds,0
 sdf,0
+aa,190
+aaa,190
+aa,190
+adsf,0
+aaa,130
+aaa,0
+aaaaa,0
+ggg,0
+ggs,0
+afd,0
+sdfas,0
+fs,0

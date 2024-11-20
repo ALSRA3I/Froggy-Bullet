@@ -1,4 +1,4 @@
-from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar, Entry, Toplevel, Spinbox
+from tkinter import Tk, IntVar, Label, PhotoImage, messagebox, Button, Canvas, BooleanVar, Entry, Toplevel, Spinbox, END
 from PIL import Image, ImageTk
 import math
 import random
@@ -150,22 +150,48 @@ def start_game():
         window.iconify()
         pause_toggle()
         
-
     # Bind the boss key (Ctrl+B)
     window.bind('<Control-b>', boss_key)
 
     def submit_key():
-        pass
+        global enemy_speed, enemies
+        cheat_code = cheat_entry.get().strip().lower()
+        
+        if cheat_code == "vanish":
+            for enemy_label, _ in enemies:
+                if enemy_label.winfo_exists():
+                    enemy_label.destroy()
+            enemies.clear()
+        elif cheat_code == "snail":
+            original_speed = enemy_speed
+            enemy_speed = 1
+            speeds['bug'] = enemy_speed
+            speeds['butterfly'] = enemy_speed
+            speeds['bat'] = enemy_speed
+            
+            def reset_speed():
+                global enemy_speed
+                enemy_speed = original_speed
+                speeds['bug'] = enemy_speed
+                speeds['butterfly'] = enemy_speed
+                speeds['bat'] = enemy_speed
+
+            window.after(10000, reset_speed)
+        else:
+            messagebox.showinfo("Invalid Cheat Code", "The cheat code you entered is not recognized.")
+        
+        cheat_entry.delete(0, END)
+        cheat_entry.pack_forget()
+        submit_button.pack_forget()
     
-    def show_input():
+    def show_input(event=False):
         cheat_entry.pack()
         submit_button.pack()
-        pass
+        cheat_entry.focus_set()
 
     cheat_entry = Entry(window, text="", width=20)
-    cheat_code = Button(window, text="Cheats", command=show_input, font=("Arial", 14))
-    submit_button = Button(window, text="Enter", command=submit_key, font=("Arial", 14))
-    cheat_code.pack()
+    window.bind("<Control-c>", show_input)
+    submit_button = Button(window, text="Enter", command=submit_key, font=("Arial", 8))
     
     bug_img = Image.open("fly.png")
     bug_img = bug_img.resize((20,20))
@@ -181,9 +207,9 @@ def start_game():
 
     more_speed = float(score.get()) * 0.001
     speeds = {
-        'bug': 2 + more_speed,
-        'butterfly': 2 + more_speed,
-        'bat': 2 + more_speed
+        'bug': enemy_speed + more_speed,
+        'butterfly': enemy_speed + more_speed,
+        'bat': enemy_speed + more_speed
     }
 
     def spawn_enemy(enemy_type):
@@ -400,5 +426,6 @@ right_button = "Right"
 left_button = "Left"
 fire_button = "space"
 rotation_speed = 10
+enemy_speed = 2
 
 window.mainloop()
