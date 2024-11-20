@@ -3,6 +3,8 @@ from tkinter import Toplevel, Spinbox, END
 from PIL import Image, ImageTk
 import math
 import random
+import pickle
+import os
 
 
 def configure_window():
@@ -24,10 +26,10 @@ def show_home():
         widget.destroy()
 
     # Title and buttons for home screen
-    title = Label(window, text="Froggy Bullet",
-                  font=("Arial", 16), background="#ffffff")
-    start_button = Button(window, text="Start",
+    start_button = Button(window, text="Start Game",
                           command=start_game, font=("Arial", 16))
+    load_button = Button(window, text="Load Game",
+                         command=load_game_settings, font=("Arial", 16))
     leaderboard_button = Button(window, text="Leaderboard",
                                 command=show_leaderboard, font=("Arial", 16))
     settings_button = Button(window, text="Settings",
@@ -35,9 +37,14 @@ def show_home():
     name_entry = Entry(window, text="", width=30)
 
     # Pack widgets into the window
-    title.pack(anchor="center", pady=10)
+    title_image = Image.open("title.png")
+    title_img = ImageTk.PhotoImage(title_image)
+    title_label = Label(window, image=title_img)
+    title_label.image = title_img
+    title_label.pack()
     start_button.pack(pady=20)
     name_entry.pack()
+    load_button.pack(pady=10)
     leaderboard_button.pack(pady=10)
     settings_button.pack(pady=10)
 
@@ -54,7 +61,7 @@ def start_game():
     name = name_entry.get()
     player_name = name
 
-    if player_name == "":
+    if not os.path.exists(SAVE_FILE) and player_name == "":
         messagebox.showerror("Missing Name",
                              "Please enter your name in the box")
         return
@@ -71,9 +78,14 @@ def start_game():
 
     # Score display
     global score
-    score_label = Label(window, text="Score: 0",
+    score_label = Label(window, text=f"Score: {score.get()}",
                         font=("Arial", 16), background="#ffffff")
     score_label.pack(anchor="nw", padx=10, pady=10)
+
+    # Add Save Game button
+    save_button = Button(window, text="Save Game",
+                         command=save_game_settings, font=("Arial", 10))
+    save_button.pack(anchor="nw", padx=10)
 
     # Frog character setup
     frog_img = Image.open("frog.png")
@@ -169,8 +181,8 @@ def start_game():
         pause_button.config(text="Unpause" if is_paused else "Pause")
 
     pause_button = Button(window, text="Pause",
-                          command=pause_toggle, font=("Arial", 14))
-    pause_button.pack()
+                          command=pause_toggle, font=("Arial", 10))
+    pause_button.pack(anchor="nw", padx=10)
 
     def boss_key(event=None):
         """
@@ -180,7 +192,7 @@ def start_game():
         mock_window = Toplevel(window)
         mock_window.title("My Workspace")
         mock_window.geometry("800x800")
-        bg_image = Image.open("mock_picture.jpg")
+        bg_image = Image.open("mock_picture.png")
         bg_image = bg_image.resize((800, 800))
         bg_photo = ImageTk.PhotoImage(bg_image)
 
@@ -200,11 +212,11 @@ def start_game():
         Based on the cheat code:
             - "vanish": Removes all enemies from the screen.
             - "snail": Temporarily slows down enemies' movement for 10 seconds.
-            - Invalid code: Displays an error message.
+            - "oman": Increases the score by 100
 
         Also hides the cheat input field after submission.
         """
-        global enemy_speed, enemies
+        global enemy_speed, enemies, score
 
         # Retrieve and process the cheat code input
         cheat_code = cheat_entry.get().strip().lower()
@@ -232,6 +244,12 @@ def start_game():
                 speeds['bat'] = enemy_speed
 
             window.after(10000, reset_speed)
+        elif cheat_code == "oman":
+            new_score = score.get() + 100
+            score.set(new_score)
+
+            # Update the score label to reflect the new score
+            score_label.config(text=f"Score: {new_score}")
         else:
             # Inform the user of an invalid cheat code
             messagebox.showinfo("Invalid Cheat Code",
@@ -259,20 +277,15 @@ def start_game():
 
     # Load and resize images for different enemy types
     bug_img = Image.open("fly.png").resize((20, 20))
-    bug = ImageTk.PhotoImage(bug_img)
-
     butterfly_img = Image.open("butterfly.png").resize((30, 30))
-    butterfly = ImageTk.PhotoImage(butterfly_img)
-
-    bat_img = Image.open("bat.png").resize((25, 25))
-    bat = ImageTk.PhotoImage(bat_img)
+    bat_img = Image.open("bat.png").resize((30, 30))
 
     # Adjust enemy speeds dynamically based on the score
     more_speed = float(score.get()) * 0.001
     speeds = {
         'bug': enemy_speed + more_speed,
         'butterfly': enemy_speed + more_speed,
-        'bat': enemy_speed + more_speed
+        'bat': enemy_speed + 3 + more_speed
     }
 
     def spawn_enemy(enemy_type):
@@ -286,15 +299,13 @@ def start_game():
 
         if not is_paused or not game_over_bool.get():
             # Select the appropriate image for the enemy
-            enemy_img = {
-                'bug': bug,
-                'butterfly': butterfly,
-                'bat': bat
-            }.get(enemy_type)
+            enemy_imgs = {
+                'bug': bug_img,
+                'butterfly': butterfly_img,
+                'bat': bat_img
+            }
 
-            enemy_label = Label(window, image=enemy_img, background="#7ed957")
-            enemies.append((enemy_label, enemy_type))
-            enemy_label.image = enemy_img
+            original_img = enemy_imgs.get(enemy_type)
 
             # Randomize the spawn location
             side = random.choice(["top", "left", "right", "bottom"])
@@ -306,6 +317,20 @@ def start_game():
                 x_pos, y_pos = 850, random.randint(0, 800)
             elif side == "bottom":
                 x_pos, y_pos = random.randint(0, 800), 850
+
+            # Calculate angle to face the frog
+            frog_x, frog_y = 400, 400  # Frog's position
+            dx, dy = frog_x - x_pos, frog_y - y_pos
+            angle = math.degrees(math.atan2(-dy, dx))
+            angle -= 90
+
+            # Rotate the image to face the frog
+            rotated_img = original_img.rotate(angle, expand=True)
+            enemy_img = ImageTk.PhotoImage(rotated_img)
+
+            enemy_label = Label(window, image=enemy_img, background="#7ed957")
+            enemies.append((enemy_label, enemy_type))
+            enemy_label.image = enemy_img
 
             enemy_label.place(x=x_pos, y=y_pos)
             window.update_idletasks()
@@ -340,7 +365,8 @@ def start_game():
         dx, dy = frog_x - x, frog_y - y
         distance = math.sqrt(dx**2 + dy**2)
         pace = speeds.get(enemy_type)
-        step_x, step_y = dx / distance * pace, dy / distance * pace
+        step_x = dx / distance * pace
+        step_y = dy / distance * pace
 
         # Update position
         new_x, new_y = x + step_x, y + step_y
@@ -361,33 +387,40 @@ def start_game():
         Args:
             enemy_type (str): The type of enemy defeated.
         """
-        global score
+        global score, bat_spawned
         points = {'bug': 10, 'butterfly': 20, 'bat': 20}
         score.set(score.get() + points.get(enemy_type, 0))
         score_label.config(text=f"Score: {score.get()}")
 
+        if score.get() >= 200 and not bat_spawned:
+            bat_spawned = True
+            spawn_enemy('bat')
+
     spawn_enemy('bug')
     spawn_enemy('butterfly')
-    spawn_enemy('bat')
 
 
 def game_over():
     global game_over_bool, score, player_name
     game_over_bool.set(True)
+    delete_saved_game()
     for widget in window.winfo_children():
         widget.destroy()
     with open("leaderboard.txt", "a") as leaderboard_dict:
         leaderboard_dict.write(f"{player_name},{score.get()}\n")
 
-    title = Label(window, text="Game Over",
-                  font=("Arial", 20), background="#ffffff")
     leaderboard_button = Button(window, text="Leaderboard",
                                 command=show_leaderboard, font=("Arial", 16))
     home_button = Button(window, text="Back to Home",
                          command=show_home, font=("Arial", 16))
     score_label = Label(window, text=f"Your Score: {score.get()}",
                         font=("Arial", 16), background="#ffffff")
-    title.pack(anchor="center", pady=10)
+
+    over_image = Image.open("over.png")
+    over_img = ImageTk.PhotoImage(over_image)
+    over_label = Label(window, image=over_img)
+    over_label.image = over_img
+    over_label.pack()
     score_label.pack(pady=10)
     leaderboard_button.pack(pady=10)
     home_button.pack(pady=20)
@@ -425,19 +458,19 @@ def open_settings():
     def set_left_binding(event):
         global left_button
         left_button = event.keysym
-        left_label.config(text=f"Left action now bound to: {left_button}")
+        left_label.config(text=f"Left now bound to: {left_button}")
         window.unbind("<KeyPress>")
 
     def set_right_binding(event):
         global right_button
         right_button = event.keysym
-        right_label.config(text=f"Right action now bound to: {right_button}")
+        right_label.config(text=f"Right now bound to: {right_button}")
         window.unbind("<KeyPress>")
 
     def set_fire_binding(event):
         global fire_button
         fire_button = event.keysym
-        fire_label.config(text=f"Fire action now bound to: {fire_button}")
+        fire_label.config(text=f"Fire now bound to: {fire_button}")
         window.unbind("<KeyPress>")
 
     def change_rotation_func():
@@ -500,6 +533,58 @@ def open_settings():
     home_button.pack(pady=30)
 
 
+def save_game_settings():
+    """Saves current game settings to a file."""
+    global score, rotation_angle, player_name, right_button
+    global left_button, fire_button, rotation_speed, enemy_speed
+
+    settings = {
+        "score": score.get(),
+        "rotation_angle": rotation_angle,
+        "player_name": player_name,
+        "right_button": right_button,
+        "left_button": left_button,
+        "fire_button": fire_button,
+        "rotation_speed": rotation_speed,
+        "enemy_speed": enemy_speed,
+    }
+
+    with open(SAVE_FILE, "wb") as file:
+        pickle.dump(settings, file)
+    messagebox.showinfo("Game Saved", "Your game have been saved.")
+
+
+def load_game_settings():
+    """Loads saved game settings from a file."""
+    global score, rotation_angle, player_name, right_button, left_button
+    global fire_button, rotation_speed, enemy_speed
+
+    if os.path.exists(SAVE_FILE):
+        with open(SAVE_FILE, "rb") as file:
+            settings = pickle.load(file)
+
+        # Apply loaded settings
+        score.set(settings["score"])
+        rotation_angle = settings["rotation_angle"]
+        player_name = settings["player_name"]
+        right_button = settings["right_button"]
+        left_button = settings["left_button"]
+        fire_button = settings["fire_button"]
+        rotation_speed = settings["rotation_speed"]
+        enemy_speed = settings["enemy_speed"]
+        start_game()
+        messagebox.showinfo("Game Loaded",
+                            "Your game have been loaded.")
+    else:
+        messagebox.showinfo("No Saved Data", "No saved game data found.")
+
+
+def delete_saved_game():
+    """Deletes saved game settings."""
+    if os.path.exists(SAVE_FILE):
+        os.remove(SAVE_FILE)
+
+
 window = Tk()
 configure_window()
 show_home()
@@ -515,5 +600,7 @@ left_button = "Left"
 fire_button = "space"
 rotation_speed = 10
 enemy_speed = 2
+bat_spawned = False
+SAVE_FILE = "game_save.pkl"
 
 window.mainloop()
