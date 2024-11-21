@@ -55,21 +55,33 @@ def start_game():
     score, and the player's frog character. Handles rotation,
     shooting, and enemy spawning.
     """
-    global player_name, name_entry, game_over_bool, is_paused
-    global fire_button, right_button, left_button, enemies
-    game_over_bool.set(False)
-    is_paused.set(False)
+    global player_name, name_entry, game_over_bool, is_paused, is_loaded
+    global fire_button, right_button, left_button, enemies, score
+    global bat_spawned
+
+    # Remove the previous enemies
     for enemy_label, _ in enemies:
         enemy_label.destroy()
 
     enemies = []
-    name = name_entry.get()
-    player_name = name
 
-    if not os.path.exists(SAVE_FILE) and player_name == "":
+    # Changes that happen only if the game is not loaded
+    if not is_loaded.get():
+        score.set(0)
+        bat_spawned = False
+        name = name_entry.get()
+        player_name = name
+
+    # Make sure that a name is entered if it's a new game
+    if not is_loaded.get() and player_name == "":
         messagebox.showerror("Missing Name",
                              "Please enter your name in the box")
         return
+
+    # Resetting the original states.
+    is_loaded.set(False)
+    game_over_bool.set(False)
+    is_paused.set(False)
 
     for widget in window.winfo_children():
         widget.destroy()
@@ -82,7 +94,6 @@ def start_game():
     bg_label.place(relwidth=1, relheight=1)
 
     # Score display
-    global score
     score_label = Label(window, text=f"Score: {score.get()}",
                         font=("Arial", 16), background="#ffffff")
     score_label.pack(anchor="nw", padx=10, pady=10)
@@ -655,7 +666,7 @@ def save_game_settings():
 def load_game_settings():
     """Loads saved game settings and progress from a file."""
     global score, rotation_angle, player_name, right_button, left_button
-    global fire_button, rotation_speed, enemy_speed
+    global fire_button, rotation_speed, enemy_speed, is_loaded
 
     # Check if the save file exists.
     if os.path.exists(SAVE_FILE):
@@ -672,6 +683,7 @@ def load_game_settings():
         rotation_speed = settings["rotation_speed"]
         enemy_speed = settings["enemy_speed"]
 
+        is_loaded.set(True)
         # Start the game with the loaded settings.
         start_game()
 
@@ -696,7 +708,8 @@ show_home()
 rotation_angle = 0  # Frog's rotation angle.
 score = IntVar(value=0)  # Player's score.
 game_over_bool = BooleanVar(value=False)  # Tracks game over state.
-is_paused = BooleanVar(value=False)
+is_paused = BooleanVar(value=False)  # Tracks pausing state.
+is_loaded = BooleanVar(value=False)  # Tracks loading state.
 enemies = []  # List of enemies in the game.
 player_name = ""  # Player's name.
 right_button = "Right"  # Key for moving right.
