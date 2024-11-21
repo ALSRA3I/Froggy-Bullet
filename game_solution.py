@@ -55,8 +55,8 @@ def start_game():
     score, and the player's frog character. Handles rotation,
     shooting, and enemy spawning.
     """
-    global player_name, name_entry, game_over_bool, right_button, left_button
-    global fire_button
+    global player_name, name_entry, game_over_bool
+    global fire_button, right_button, left_button
     game_over_bool.set(False)
     name = name_entry.get()
     player_name = name
@@ -114,11 +114,12 @@ def start_game():
 
     def fire(event=None):
         """
-        Fires a tongue projectile in the direction the frog is facing.
+        Fires a tongue in the direction the frog is facing.
         Handles collision detection with enemies and boundary conditions.
         """
         global game_over_bool
         if not is_paused or not game_over_bool.get():
+            # Create and display the tongue image.
             tongue_img = Image.open("tongue.jpg").resize((10, 10))
             tongue = ImageTk.PhotoImage(tongue_img)
             tongue_label = Label(window, image=tongue, background="#f7c3c3")
@@ -128,27 +129,30 @@ def start_game():
 
             def move_tongue():
                 """
-                Moves the tongue projectile in the direction of rotation.
+                Moves the tongue in the direction of rotation.
                 Checks for collisions with enemies or boundaries.
                 """
+                # Get the current tongue position.
                 x = tongue_label.winfo_x()
                 y = tongue_label.winfo_y()
 
+                # Calculate movement direction based on the rotation angle.
                 corrected_angle = rotation_angle + 90
-
-                radians = math.radians(corrected_angle)
+                radians = math.radians(corrected_angle)  # Convert to radians
                 dx = math.cos(radians)
                 dy = -math.sin(radians)
 
+                # Movement speed and steps
                 pace = 50
                 step_x = dx * pace
                 step_y = dy * pace
-
                 new_x = x + step_x
                 new_y = y + step_y
 
+                # Update tongue position.
                 tongue_label.place(x=new_x, y=new_y)
 
+                # Check for collisions with enemies.
                 for enemy_label, enemy_type in enemies:
                     ex, ey = enemy_label.winfo_x(), enemy_label.winfo_y()
                     if abs(new_x - ex) < 25 and abs(new_y - ey) < 25:
@@ -158,6 +162,7 @@ def start_game():
                         enemy_death(enemy_type)  # Update score
                         return  # Stop tongue movement
 
+                # Destroy the tongue if it moves out of window
                 if not (0 <= new_x <= 800 and 0 <= new_y <= 800):
                     tongue_label.destroy()
                     return
@@ -180,6 +185,7 @@ def start_game():
         is_paused = not is_paused
         pause_button.config(text="Unpause" if is_paused else "Pause")
 
+    # Add the pause button and display it.
     pause_button = Button(window, text="Pause",
                           command=pause_toggle, font=("Arial", 10))
     pause_button.pack(anchor="nw", padx=10)
@@ -200,6 +206,7 @@ def start_game():
         bg_label.image = bg_photo
         bg_label.place(relwidth=1, relheight=1)
 
+        # Minimize the game window and pauses the game
         window.iconify()
         pause_toggle()
 
@@ -392,6 +399,7 @@ def start_game():
         score.set(score.get() + points.get(enemy_type, 0))
         score_label.config(text=f"Score: {score.get()}")
 
+        # The bat will be spawned after score 200
         if score.get() >= 200 and not bat_spawned:
             bat_spawned = True
             spawn_enemy('bat')
@@ -401,25 +409,54 @@ def start_game():
 
 
 def game_over():
+    """Ends the game and transitions to a "Game Over" screen."""
     global game_over_bool, score, player_name
+
+    # Set the game-over flag to True.
     game_over_bool.set(True)
+
+    # Delete any saved game data.
     delete_saved_game()
+
+    # Clear all widgets from the main game window.
     for widget in window.winfo_children():
         widget.destroy()
+
+    # Append the player's name and score to the leaderboard file.
     with open("leaderboard.txt", "a") as leaderboard_dict:
         leaderboard_dict.write(f"{player_name},{score.get()}\n")
 
-    leaderboard_button = Button(window, text="Leaderboard",
-                                command=show_leaderboard, font=("Arial", 16))
-    home_button = Button(window, text="Back to Home",
-                         command=show_home, font=("Arial", 16))
-    score_label = Label(window, text=f"Your Score: {score.get()}",
-                        font=("Arial", 16), background="#ffffff")
+    # Create and configure the Leaderboard button.
+    leaderboard_button = Button(
+        window,
+        text="Leaderboard",
+        command=show_leaderboard,
+        font=("Arial", 16)
+    )
 
+    # Create and configure the Home button.
+    home_button = Button(
+        window,
+        text="Back to Home",
+        command=show_home,
+        font=("Arial", 16)
+    )
+
+    # Display the player's final score.
+    score_label = Label(
+        window,
+        text=f"Your Score: {score.get()}",
+        font=("Arial", 16),
+        background="#ffffff"
+    )
+
+    # Load and display the "Game Over" image.
     over_image = Image.open("over.png")
     over_img = ImageTk.PhotoImage(over_image)
     over_label = Label(window, image=over_img)
     over_label.image = over_img
+
+    # Pack the widgets on the "Game Over" screen.
     over_label.pack()
     score_label.pack(pady=10)
     leaderboard_button.pack(pady=10)
@@ -427,63 +464,104 @@ def game_over():
 
 
 def show_leaderboard():
+    """Displays the leaderboard screen with the top player scores."""
+
+    # Clear all widgets from the main window.
     for widget in window.winfo_children():
         widget.destroy()
-    title = Label(window, text="Leaderboard",
-                  font=("Arial", 16), background="#ffffff")
-    home_button = Button(window, text="Back to Home",
-                         command=show_home, font=("Arial", 16))
+
+    # Create and configure the leaderboard title.
+    title = Label(
+        window,
+        text="Leaderboard",
+        font=("Arial", 16),
+        background="#ffffff"
+    )
+
+    # Create the "Back to Home" button for navigation.
+    home_button = Button(
+        window,
+        text="Back to Home",
+        command=show_home,
+        font=("Arial", 16)
+    )
+
+    # Initialize a list to store scores from the leaderboard file.
     scores = []
+
+    # Read and parse the leaderboard file to extract player names and scores.
     with open("leaderboard.txt", "r") as file:
         for line in file:
             player_name, score = line.strip().split(',')
             scores.append((player_name, int(score)))
 
+    # Sort scores in descending order.
     scores.sort(key=lambda x: x[1], reverse=True)
 
+    # Display the leaderboard title at the top.
     title.pack(anchor="center", pady=10)
+
+    # Display the top 5 scores or fewer if there are less than 5 entries.
     for i in range(min(5, len(scores))):
         player_name, score = scores[i]
-        rank_label = Label(window, text=f"{i+1}. {player_name}: {score}",
-                           font=("Arial", 12), background="#ffffff")
+        rank_label = Label(
+            window,
+            text=f"{i+1}. {player_name}: {score}",
+            font=("Arial", 12),
+            background="#ffffff"
+        )
         rank_label.pack(anchor="center", pady=10)
 
+    # Add the "Back to Home" button at the bottom.
     home_button.pack(pady=20)
 
 
 def open_settings():
+    """Displays the settings screen where the user
+    can customize game controls and rotation speed."""
+
+    # Clear all widgets from the main window.
     for widget in window.winfo_children():
         widget.destroy()
 
+    # Function to bind the "Left" key action to a new key.
     def set_left_binding(event):
         global left_button
         left_button = event.keysym
         left_label.config(text=f"Left now bound to: {left_button}")
         window.unbind("<KeyPress>")
 
+    # Function to bind the "Right" key action to a new key.
     def set_right_binding(event):
         global right_button
         right_button = event.keysym
         right_label.config(text=f"Right now bound to: {right_button}")
         window.unbind("<KeyPress>")
 
+    # Function to bind the "Fire" key action to a new key.
     def set_fire_binding(event):
         global fire_button
         fire_button = event.keysym
         fire_label.config(text=f"Fire now bound to: {fire_button}")
         window.unbind("<KeyPress>")
 
+    # Function to change the rotation speed of the game.
     def change_rotation_func():
         global rotation_speed
         rotation_speed = int(change_rotation.get())
         rotation_label.config(text=f"Rotation Speed: {rotation_speed}")
 
+    # Title label.
     title = Label(window, text="Settings",
                   font=("Arial", 16), background="#ffffff")
+
+    # "Back to Home" button for navigation.
     home_button = Button(window,
                          text="Back to Home",
                          command=show_home,
                          font=("Arial", 16))
+
+    # Labels to display current key bindings.
     left_label = Label(window,
                        text=f"Left currently bound to: {left_button}",
                        font=("Arial", 16), background="#ffffff")
@@ -493,51 +571,64 @@ def open_settings():
     fire_label = Label(window,
                        text=f"Fire currently bound to: {fire_button}",
                        font=("Arial", 16), background="#ffffff")
+
+    # Buttons to change key bindings.
     change_left = Button(window,
-                         text="Press any key for Left", font=("Arial", 16),
+                         text="Press any key for Left",
+                         font=("Arial", 16),
                          command=lambda: window.bind("<KeyPress>",
                                                      set_left_binding))
     change_right = Button(window,
-                          text="Press any key for Right", font=("Arial", 16),
+                          text="Press any key for Right",
+                          font=("Arial", 16),
                           command=lambda: window.bind("<KeyPress>",
                                                       set_right_binding))
     change_fire = Button(window,
-                         text="Press any key for Fire", font=("Arial", 16),
+                         text="Press any key for Fire",
+                         font=("Arial", 16),
                          command=lambda: window.bind("<KeyPress>",
                                                      set_fire_binding))
 
+    # Button and spinbox for adjusting rotation speed.
     change_rotation_button = Button(window,
                                     text="Change the rotation speed",
                                     font=("Arial", 16),
                                     command=change_rotation_func)
     change_rotation = Spinbox(window, from_=1, to=20,
                               state="readonly", font=("Arial", 14), width=5)
-    change_rotation.delete(0, "end")
+    change_rotation.delete(0, "end")  # Clear initial value.
     change_rotation.insert(0, rotation_speed)
+
+    # Label to display the current rotation speed.
     rotation_label = Label(window, text=f"Rotation Speed: {rotation_speed}",
                            font=("Arial", 16), background="#ffffff")
 
+    # Pack UI elements to display them on the settings screen.
     title.pack(anchor="center", pady=10)
+
+    # Key-binding controls.
     change_left.pack(pady=10)
     left_label.pack()
     change_right.pack(pady=10)
     right_label.pack()
-
     change_fire.pack(pady=10)
     fire_label.pack()
 
+    # Rotation speed controls.
     change_rotation_button.pack(pady=10)
     change_rotation.pack()
     rotation_label.pack(pady=10)
 
+    # Home button at the bottom.
     home_button.pack(pady=30)
 
 
 def save_game_settings():
-    """Saves current game settings to a file."""
+    """Saves the current game settings and progress to a file."""
     global score, rotation_angle, player_name, right_button
     global left_button, fire_button, rotation_speed, enemy_speed
 
+    # Create a dictionary containing all settings and game progress to save.
     settings = {
         "score": score.get(),
         "rotation_angle": rotation_angle,
@@ -549,21 +640,25 @@ def save_game_settings():
         "enemy_speed": enemy_speed,
     }
 
+    # Save the settings to a binary file using pickle.
     with open(SAVE_FILE, "wb") as file:
         pickle.dump(settings, file)
-    messagebox.showinfo("Game Saved", "Your game have been saved.")
+
+    # Show a confirmation message to the user.
+    messagebox.showinfo("Game Saved", "Your game has been saved.")
 
 
 def load_game_settings():
-    """Loads saved game settings from a file."""
+    """Loads saved game settings and progress from a file."""
     global score, rotation_angle, player_name, right_button, left_button
     global fire_button, rotation_speed, enemy_speed
 
+    # Check if the save file exists.
     if os.path.exists(SAVE_FILE):
         with open(SAVE_FILE, "rb") as file:
-            settings = pickle.load(file)
+            settings = pickle.load(file)  # Deserialize the saved settings.
 
-        # Apply loaded settings
+        # Apply loaded settings to the game variables.
         score.set(settings["score"])
         rotation_angle = settings["rotation_angle"]
         player_name = settings["player_name"]
@@ -572,9 +667,12 @@ def load_game_settings():
         fire_button = settings["fire_button"]
         rotation_speed = settings["rotation_speed"]
         enemy_speed = settings["enemy_speed"]
+
+        # Start the game with the loaded settings.
         start_game()
-        messagebox.showinfo("Game Loaded",
-                            "Your game have been loaded.")
+
+        # Notify the user that the game has been loaded or not found.
+        messagebox.showinfo("Game Loaded", "Your game has been loaded.")
     else:
         messagebox.showinfo("No Saved Data", "No saved game data found.")
 
@@ -585,22 +683,23 @@ def delete_saved_game():
         os.remove(SAVE_FILE)
 
 
+# Initialize the main application window and configure it.
 window = Tk()
 configure_window()
 show_home()
 
-# Here is the global variables
-rotation_angle = 0  # for frog rotation
-score = IntVar(value=0)
-game_over_bool = BooleanVar(value=False)
-enemies = []
-player_name = ""
-right_button = "Right"
-left_button = "Left"
-fire_button = "space"
-rotation_speed = 10
-enemy_speed = 2
-bat_spawned = False
-SAVE_FILE = "game_save.pkl"
+# Global game variables.
+rotation_angle = 0  # Frog's rotation angle.
+score = IntVar(value=0)  # Player's score.
+game_over_bool = BooleanVar(value=False)  # Tracks game over state.
+enemies = []  # List of enemies in the game.
+player_name = ""  # Player's name.
+right_button = "Right"  # Key for moving right.
+left_button = "Left"  # Key for moving left.
+fire_button = "space"  # Key for firing.
+rotation_speed = 10  # Frog's rotation speed.
+enemy_speed = 2  # Enemy movement speed.
+bat_spawned = False  # Tracks if a bat enemy has spawned.
+SAVE_FILE = "game_save.pkl"  # File for saving/loading functionality.
 
 window.mainloop()

@@ -1,6 +1,10 @@
-wa,400
-dsad,80
-aa,30
+abdulrahman,400
+ali,80
+salim,30
 aaa,220
 aaa,360
 aaa,330
+asdf,40
+asdf,530
+sdf,0
+sdfa,460
