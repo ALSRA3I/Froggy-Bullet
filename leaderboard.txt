@@ -8,3 +8,5 @@ asdf,40
 asdf,530
 sdf,0
 sdfa,460
+,20
+adf,210
