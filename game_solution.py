@@ -55,9 +55,14 @@ def start_game():
     score, and the player's frog character. Handles rotation,
     shooting, and enemy spawning.
     """
-    global player_name, name_entry, game_over_bool
-    global fire_button, right_button, left_button
+    global player_name, name_entry, game_over_bool, is_paused
+    global fire_button, right_button, left_button, enemies
     game_over_bool.set(False)
+    is_paused.set(False)
+    for enemy_label, _ in enemies:
+        enemy_label.destroy()
+
+    enemies = []
     name = name_entry.get()
     player_name = name
 
@@ -102,23 +107,25 @@ def start_game():
 
     def rotate_left(event=None):
         """Rotates the frog to the left by increasing the rotation angle."""
-        global rotation_angle, rotation_speed
-        rotation_angle = (rotation_angle + rotation_speed) % 360
-        update_frog_image()
+        global rotation_angle, rotation_speed, is_paused, game_over_bool
+        if not is_paused.get() and not game_over_bool.get():
+            rotation_angle = (rotation_angle + rotation_speed) % 360
+            update_frog_image()
 
     def rotate_right(event=None):
         """Rotates the frog to the right by decreasing the rotation angle."""
-        global rotation_angle, rotation_speed
-        rotation_angle = (rotation_angle - rotation_speed) % 360
-        update_frog_image()
+        global rotation_angle, rotation_speed, is_paused, game_over_bool
+        if not is_paused.get() and not game_over_bool.get():
+            rotation_angle = (rotation_angle - rotation_speed) % 360
+            update_frog_image()
 
     def fire(event=None):
         """
         Fires a tongue in the direction the frog is facing.
         Handles collision detection with enemies and boundary conditions.
         """
-        global game_over_bool
-        if not is_paused or not game_over_bool.get():
+        global game_over_bool, is_paused
+        if not is_paused.get() and not game_over_bool.get():
             # Create and display the tongue image.
             tongue_img = Image.open("tongue.jpg").resize((10, 10))
             tongue = ImageTk.PhotoImage(tongue_img)
@@ -176,14 +183,11 @@ def start_game():
     window.bind(f"<{right_button}>", rotate_right)
     window.bind(f"<{fire_button}>", fire)
 
-    # Pause functionality
-    is_paused = False
-
     def pause_toggle():
         """Toggles the paused state of the game."""
-        nonlocal is_paused
-        is_paused = not is_paused
-        pause_button.config(text="Unpause" if is_paused else "Pause")
+        global is_paused
+        is_paused.set(not is_paused.get())
+        pause_button.config(text="Unpause" if is_paused.get() else "Pause")
 
     # Add the pause button and display it.
     pause_button = Button(window, text="Pause",
@@ -302,9 +306,9 @@ def start_game():
         Args:
             enemy_type (str): The type of enemy ('bug', 'butterfly', 'bat').
         """
-        global enemies, game_over_bool
+        global enemies, game_over_bool, is_paused
 
-        if not is_paused or not game_over_bool.get():
+        if not is_paused.get() or not game_over_bool.get():
             # Select the appropriate image for the enemy
             enemy_imgs = {
                 'bug': bug_img,
@@ -356,9 +360,9 @@ def start_game():
             enemy_label (Label): The label representing the enemy.
             enemy_type (str): The type of enemy.
         """
-        global game_over_bool
+        global game_over_bool, is_paused
 
-        if is_paused or game_over_bool.get():
+        if is_paused.get() or game_over_bool.get():
             window.after(100, lambda: move_enemy(enemy_label, enemy_type))
             return
 
@@ -692,6 +696,7 @@ show_home()
 rotation_angle = 0  # Frog's rotation angle.
 score = IntVar(value=0)  # Player's score.
 game_over_bool = BooleanVar(value=False)  # Tracks game over state.
+is_paused = BooleanVar(value=False)
 enemies = []  # List of enemies in the game.
 player_name = ""  # Player's name.
 right_button = "Right"  # Key for moving right.
