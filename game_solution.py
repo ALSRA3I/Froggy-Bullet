@@ -60,8 +60,8 @@ def start_game():
     global bat_spawned, active_timers, more_speed
 
     # Remove the previous enemies
-    for enemy_label, _ in enemies:
-        enemy_label.destroy()
+    for enemy in enemies:
+        enemy.destroy()
     enemies = []
 
     # Remove the previous spawning schedules
@@ -91,7 +91,7 @@ def start_game():
         widget.destroy()
 
     # Background setup
-    bg_image = Image.open("background.jpg")
+    bg_image = Image.open("background.png")
     bg_img = ImageTk.PhotoImage(bg_image)
     bg_label = Label(window, image=bg_img)
     bg_label.image = bg_img
@@ -110,7 +110,7 @@ def start_game():
     # Frog character setup
     frog_img = Image.open("frog.png")
     frog = ImageTk.PhotoImage(frog_img)
-    frog_label = Label(window, image=frog, background="#ffde59")
+    frog_label = Label(window, image=frog, background="#d4fdc2")
     frog_label.image = frog
     frog_label.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -175,14 +175,37 @@ def start_game():
                 tongue_label.place(x=new_x, y=new_y)
 
                 # Check for collisions with enemies.
-                for enemy_label, enemy_type in enemies:
+                for enemy_data in enemies:
+                    enemy_label, enemy_type, hit_count, img_index = enemy_data
                     ex, ey = enemy_label.winfo_x(), enemy_label.winfo_y()
                     if abs(new_x - ex) < 25 and abs(new_y - ey) < 25:
-                        enemy_label.destroy()  # Remove enemy
-                        tongue_label.destroy()  # Remove tongue
-                        enemies.remove((enemy_label, enemy_type))
-                        enemy_death(enemy_type)  # Update score
-                        return  # Stop tongue movement
+                        if enemy_type == 'butterfly':
+                            hit_count += 1
+                            if hit_count >= 3:
+                                enemy_label.destroy()  # Remove enemy
+                                tongue_label.destroy()  # Remove tongue
+                                enemies.remove((enemy_data))
+                                enemy_death(enemy_type)  # Update score
+                                return  # Stop tongue movement
+                            else:
+                                img_index = min(hit_count,
+                                                len(butterfly_imgs) - 1)
+                                new_image = butterfly_imgs[img_index]
+                                i = new_image.rotate(rotation_angle - 180,
+                                                     expand=True)
+                                new_img = ImageTk.PhotoImage(i)
+                                enemy_label.config(image=new_img)
+                                enemy_label.image = new_img
+                                enemy_data[2] = hit_count
+                                enemy_data[3] = img_index
+                                tongue_label.destroy()
+                                return
+                        else:
+                            enemy_label.destroy()  # Remove enemy
+                            tongue_label.destroy()  # Remove tongue
+                            enemies.remove((enemy_data))
+                            enemy_death(enemy_type)  # Update score
+                            return  # Stop tongue movement
 
                 # Destroy the tongue if it moves out of window
                 if not (0 <= new_x <= 800 and 0 <= new_y <= 800):
@@ -262,7 +285,7 @@ def start_game():
 
         if cheat_code == "vanish":
             # Remove all enemy labels and clear the enemies list
-            for enemy_label, _ in enemies:
+            for enemy_label, _, __, ___ in enemies:
                 if enemy_label.winfo_exists():
                     enemy_label.destroy()
             enemies.clear()
@@ -280,7 +303,7 @@ def start_game():
                 enemy_speed = original_speed
                 speeds['bug'] = enemy_speed + more_speed
                 speeds['butterfly'] = enemy_speed + more_speed
-                speeds['bat'] = enemy_speed + 3 + more_speed
+                speeds['bat'] = enemy_speed + 4 + more_speed
 
             window.after(10000, reset_speed)
         elif cheat_code == "oman":
@@ -316,15 +339,19 @@ def start_game():
 
     # Load and resize images for different enemy types
     bug_img = Image.open("fly.png").resize((20, 20))
-    butterfly_img = Image.open("butterfly.png").resize((30, 30))
     bat_img = Image.open("bat.png").resize((30, 30))
+    butterfly_imgs = [
+        Image.open("butterfly.png").resize((30, 30)),
+        Image.open("butterfly2.png").resize((30, 30)),
+        Image.open("butterfly3.png").resize((30, 30)),
+    ]
 
     # Adjust enemy speeds dynamically based on the score
     more_speed = float(score.get()) // 300
     speeds = {
         'bug': enemy_speed + more_speed,
         'butterfly': enemy_speed + more_speed,
-        'bat': enemy_speed + 3 + more_speed
+        'bat': enemy_speed + 4 + more_speed
     }
 
     def spawn_enemy(enemy_type):
@@ -340,7 +367,7 @@ def start_game():
             # Select the appropriate image for the enemy
             enemy_imgs = {
                 'bug': bug_img,
-                'butterfly': butterfly_img,
+                'butterfly': butterfly_imgs[0],
                 'bat': bat_img
             }
 
@@ -367,8 +394,8 @@ def start_game():
             rotated_img = original_img.rotate(angle, expand=True)
             enemy_img = ImageTk.PhotoImage(rotated_img)
 
-            enemy_label = Label(window, image=enemy_img, background="#7ed957")
-            enemies.append((enemy_label, enemy_type))
+            enemy_label = Label(window, image=enemy_img, background="#1787c8")
+            enemies.append([enemy_label, enemy_type, 0, 0])
             enemy_label.image = enemy_img
 
             enemy_label.place(x=x_pos, y=y_pos)
@@ -376,7 +403,7 @@ def start_game():
 
             # Move the enemy and schedule future spawns
             move_enemy(enemy_label, enemy_type)
-            spawn_delays = {'bug': 3000, 'butterfly': 4000, 'bat': 8000}
+            spawn_delays = {'bug': 3000, 'butterfly': 6000, 'bat': 8000}
             timer_id = window.after(spawn_delays[enemy_type],
                                     lambda: spawn_enemy(enemy_type))
             active_timers.append(timer_id)
@@ -452,7 +479,7 @@ def game_over():
     delete_saved_game()
 
     # Remove the previous enemies
-    for enemy_label, _ in enemies:
+    for enemy_label, _, __, i in enemies:
         enemy_label.destroy()
     enemies = []
 
@@ -712,6 +739,7 @@ def load_game_settings():
         enemy_speed = settings["enemy_speed"]
 
         is_loaded.set(True)
+
         # Start the game with the loaded settings.
         start_game()
 

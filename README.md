@@ -42,6 +42,9 @@ Save/load functionality for resuming gameplay.
 
 ## References
 
-1. [Butterfly Image](https://www.flaticon.com/free-icon/butterfly_338286?term=butterfly&page=1&position=5&origin=search&related_id=338286)  
+1. [Butterfly Image](https://www.flaticon.com/free-icon/butterfly_408057?term=butterfly&page=2&position=9&origin=search&related_id=408057)
 2. [Fly Image](https://www.flaticon.com/free-icon/fly_9421093?term=fly&page=1&position=27&origin=search&related_id=9421093)
 3. [Bat Image](https://www.flaticon.com/free-icon/bat_8625588?term=bat&page=1&position=76&origin=search&related_id=8625588)
+4. [Frog Image](https://pixel-prismor.itch.io/colorful-frogs)
+5. [Butterfly2 Image](https://www.flaticon.com/free-icon/butterfly_628300?term=butterfly&page=1&position=12&origin=search&related_id=628300)
+6. [Butterfly3 Image](https://www.flaticon.com/free-icon/butterfly_2281191?term=butterfly&page=1&position=60&origin=search&related_id=2281191)
