@@ -1,3 +1,7 @@
-asdf,80
-asdf,590
-asdf,210
+ali,80
+sami,590
+john,210
+abdurahman,440
+Zak,460
+Rashid,200
+Mohammed,80
