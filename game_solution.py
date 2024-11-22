@@ -57,13 +57,17 @@ def start_game():
     """
     global player_name, name_entry, game_over_bool, is_paused, is_loaded
     global fire_button, right_button, left_button, enemies, score
-    global bat_spawned
+    global bat_spawned, active_timers, more_speed
 
     # Remove the previous enemies
     for enemy_label, _ in enemies:
         enemy_label.destroy()
-
     enemies = []
+
+    # Remove the previous spawning schedules
+    for timer_id in active_timers:
+        window.after_cancel(timer_id)
+    active_timers = []
 
     # Changes that happen only if the game is not loaded
     if not is_loaded.get():
@@ -196,9 +200,20 @@ def start_game():
 
     def pause_toggle():
         """Toggles the paused state of the game."""
-        global is_paused
+        global is_paused, active_timers, bat_spawned
+
         is_paused.set(not is_paused.get())
         pause_button.config(text="Unpause" if is_paused.get() else "Pause")
+
+        if is_paused.get():
+            for timer_id in active_timers:
+                window.after_cancel(timer_id)
+            active_timers = []
+        else:
+            spawn_enemy('bug')
+            spawn_enemy('butterfly')
+            if bat_spawned:
+                spawn_enemy('bat')
 
     # Add the pause button and display it.
     pause_button = Button(window, text="Pause",
@@ -212,9 +227,11 @@ def start_game():
         """
         mock_window = Toplevel(window)
         mock_window.title("My Workspace")
-        mock_window.geometry("800x800")
+        screen_width = mock_window.winfo_screenwidth()
+        screen_height = mock_window.winfo_screenheight()
+        mock_window.geometry(f"{screen_width}x{screen_height}")
         bg_image = Image.open("mock_picture.png")
-        bg_image = bg_image.resize((800, 800))
+        bg_image = bg_image.resize((screen_width, screen_height))
         bg_photo = ImageTk.PhotoImage(bg_image)
 
         bg_label = Label(mock_window, image=bg_photo)
@@ -259,11 +276,11 @@ def start_game():
 
             def reset_speed():
                 """Restores the original speed of the enemies."""
-                global enemy_speed
+                global enemy_speed, more_speed
                 enemy_speed = original_speed
-                speeds['bug'] = enemy_speed
-                speeds['butterfly'] = enemy_speed
-                speeds['bat'] = enemy_speed
+                speeds['bug'] = enemy_speed + more_speed
+                speeds['butterfly'] = enemy_speed + more_speed
+                speeds['bat'] = enemy_speed + 3 + more_speed
 
             window.after(10000, reset_speed)
         elif cheat_code == "oman":
@@ -303,7 +320,7 @@ def start_game():
     bat_img = Image.open("bat.png").resize((30, 30))
 
     # Adjust enemy speeds dynamically based on the score
-    more_speed = float(score.get()) * 0.001
+    more_speed = float(score.get()) // 300
     speeds = {
         'bug': enemy_speed + more_speed,
         'butterfly': enemy_speed + more_speed,
@@ -317,7 +334,7 @@ def start_game():
         Args:
             enemy_type (str): The type of enemy ('bug', 'butterfly', 'bat').
         """
-        global enemies, game_over_bool, is_paused
+        global enemies, game_over_bool, is_paused, active_timers
 
         if not is_paused.get() or not game_over_bool.get():
             # Select the appropriate image for the enemy
@@ -359,9 +376,10 @@ def start_game():
 
             # Move the enemy and schedule future spawns
             move_enemy(enemy_label, enemy_type)
-            spawn_delays = {'bug': 5000, 'butterfly': 8000, 'bat': 10000}
-            window.after(spawn_delays[enemy_type],
-                         lambda: spawn_enemy(enemy_type))
+            spawn_delays = {'bug': 3000, 'butterfly': 4000, 'bat': 8000}
+            timer_id = window.after(spawn_delays[enemy_type],
+                                    lambda: spawn_enemy(enemy_type))
+            active_timers.append(timer_id)
 
     def move_enemy(enemy_label, enemy_type):
         """
@@ -425,13 +443,23 @@ def start_game():
 
 def game_over():
     """Ends the game and transitions to a "Game Over" screen."""
-    global game_over_bool, score, player_name
+    global game_over_bool, score, player_name, enemies, active_timers
 
     # Set the game-over flag to True.
     game_over_bool.set(True)
 
     # Delete any saved game data.
     delete_saved_game()
+
+    # Remove the previous enemies
+    for enemy_label, _ in enemies:
+        enemy_label.destroy()
+    enemies = []
+
+    # Remove the previous spawning schedules
+    for timer_id in active_timers:
+        window.after_cancel(timer_id)
+    active_timers = []
 
     # Clear all widgets from the main game window.
     for widget in window.winfo_children():
@@ -718,6 +746,8 @@ fire_button = "space"  # Key for firing.
 rotation_speed = 10  # Frog's rotation speed.
 enemy_speed = 2  # Enemy movement speed.
 bat_spawned = False  # Tracks if a bat enemy has spawned.
+active_timers = []  # List of schedule enemies in the game.
+more_speed = 0  # For speed up the enemies
 SAVE_FILE = "game_save.pkl"  # File for saving/loading functionality.
 
 window.mainloop()
