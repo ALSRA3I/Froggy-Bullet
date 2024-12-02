@@ -5,3 +5,5 @@ abdurahman,440
 Zak,460
 Rashid,200
 Mohammed,80
+Zaher,300
+Sarah,130
